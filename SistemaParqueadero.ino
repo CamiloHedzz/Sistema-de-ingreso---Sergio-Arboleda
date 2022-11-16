@@ -6,8 +6,6 @@
 #include <LCD.h>
 #include <LiquidCrystal_I2C.h>
 
-
-
 #define RST_PIN         9
 #define SS_PIN          10
 
@@ -18,17 +16,11 @@ int segundos = 0;
 LiquidCrystal_I2C lcd (0x27,2,1,0,4,5,6,7);
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
 
-/*
-
-String tarjeta = "C3 F9 09 2E";
-String boton = "76 DB 60 D3";
-Serial.print(EEPROM.get(0, tarjeta));
-Serial.print(EEPROM.get(11, boton));
-
-*/
 String tarjeta = "C3 F9 09 2E";
 String formato = "XX XX XX XX";
 
+int notas[] ={ 3, 4, 2, 4.0, 5.0, 2.3, 3.8};
+ 
 void setup() {
   EEPROM.put(0, tarjeta);
   miServo.attach(5);
@@ -38,7 +30,7 @@ void setup() {
   inicializarPantalla();  
 }
 
-void inicializarPantalla(){
+void inicializarPantalla(){          //Inicializar Pantalla 
   lcd.setBacklightPin(3, POSITIVE);
   lcd.setBacklight(HIGH);
   lcd.begin(16, 2);
@@ -46,7 +38,7 @@ void inicializarPantalla(){
   //imprimirInicio();
 }
 
-void inicializarTarjeta(){
+void inicializarTarjeta(){          //Inicializa la tarjeta RFID
   Serial.begin(9600); 
   while (!Serial); 
   SPI.begin();  
@@ -61,7 +53,7 @@ void loop() {
   imprimirInicio();
   //Serial.println(EEPROM.get(0, tarjeta));
   if ( ! mfrc522.PICC_IsNewCardPresent()) {// valida si hay una tarjeta presente
-    //imprimirInicio();
+    imprimirInicio();
     Serial.println("Hay algo...");
     return;
   }
@@ -69,7 +61,7 @@ void loop() {
   if ( ! mfrc522.PICC_ReadCardSerial()) {// leer la tarjeta
     return;
   }
-  //mfrc522.PICC_DumpToSerial(&(mfrc522.uid));// imprime la informacion al serial
+  mfrc522.PICC_DumpToSerial(&(mfrc522.uid));// imprime la informacion al serial
   
   String content= "";
   byte letter;
@@ -82,8 +74,8 @@ void loop() {
      abrirPuerta();
   }else{
     Serial.println("Esa no es");
-     //imprimirRechazo();
-     digitalWrite(LEDR, HIGH);
+     imprimirRechazo();
+     digitalWrite(LEDR, HIGH);  // Prende un LED rojo si no esta registrado
      delay(500);
      digitalWrite(LEDR, LOW);
   }
@@ -115,12 +107,12 @@ void imprimirRechazo(){
 }
 
 void abrirPuerta(){
-  digitalWrite(LEDA, HIGH);
+  digitalWrite(LEDA, HIGH);  //Prende un led azul si esta registrado
   miServo.write(180);
   delay(200);
   miServo.write(90);
   while(segundos<5){
-    //imprimirBienvenida();
+    imprimirBienvenida();
     delay(1000);
     segundos++;
   }
